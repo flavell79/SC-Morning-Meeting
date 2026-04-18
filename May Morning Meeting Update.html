@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFES Training Division Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Force colors and backgrounds when saving to PDF */
+        @media print {
+            .no-print { display: none !important; }
+            
+            @page {
+                size: portrait;
+                margin: 0.5cm; /* Smaller margins to maximize page space */
+            }
+
+            body { 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important;
+                background-color: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            #app {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+                background-color: white !important;
+                border-radius: 0.75rem !important;
+                overflow: visible !important; /* Allow content to flow across pages */
+                width: 100% !important;
+                max-width: none !important;
+            }
+
+            /* PREVENT BOX BREAKING */
+            section, 
+            .grid > div, 
+            header,
+            .bg-slate-900 {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                margin-bottom: 1rem !important;
+            }
+
+            header {
+                background-color: #b91c1c !important; /* bg-red-700 */
+                color: white !important;
+                border-radius: 0.75rem 0.75rem 0 0 !important;
+            }
+
+            .bg-slate-900 {
+                background-color: #0f172a !important;
+                color: white !important;
+            }
+
+            .bg-slate-50 {
+                background-color: #f8fafc !important;
+            }
+
+            input, textarea, select {
+                background-color: inherit !important;
+                border-color: #e2e8f0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Ensure textareas don't look like empty boxes if they have content */
+            textarea {
+                resize: none !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+
+            /* FORCE DESKTOP LAYOUT IN PRINT (Overrides mobile-first print behavior) */
+            .md\:flex-row { flex-direction: row !important; }
+            .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+            .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+            
+            /* Tighten gaps and padding slightly to ensure everything fits cleanly */
+            .gap-6 { gap: 1rem !important; }
+            .gap-8 { gap: 1.5rem !important; }
+            .p-6 { padding: 1.5rem !important; }
+            .md\:p-8 { padding: 1.5rem !important; }
+        }
+
+        /* Standard textarea behavior for screen */
+        textarea {
+            resize: none;
+            overflow: hidden;
+        }
+
+        /* Custom scrollbar for textareas */
+        textarea::-webkit-scrollbar { width: 4px; }
+        textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .modal-active {
+            display: flex !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 p-4 md:p-8 font-sans transition-colors duration-200">
+
+    <div id="app" class="max-w-5xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden border border-slate-200 transition-all">
+        
+        <!-- Header Section -->
+        <header class="bg-red-700 text-white p-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-white/10 rounded-lg no-print">
+                        <i data-lucide="clipboard-check" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight">MFES Training Division</h1>
+                        <p class="text-red-100">Daily Briefing</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-2 no-print">
+                    <button onclick="window.print()" class="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-all text-sm font-medium">
+                        <i data-lucide="printer" class="w-4 h-4"></i> Save as PDF
+                    </button>
+                    <button onclick="toggleModal(true)" class="flex items-center gap-2 bg-red-900/40 hover:bg-red-900/60 px-4 py-2 rounded-lg transition-all text-sm font-medium text-red-100">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6 md:p-8 space-y-8">
+            
+            <!-- Quick Stats / Logistics -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Meeting Date
+                    </label>
+                    <input type="date" id="date" oninput="saveData()" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
+                        <i data-lucide="clock" class="w-3.5 h-3.5"></i> Time
+                    </label>
+                    <textarea id="time" rows="1" oninput="saveData()" spellcheck="true" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">0710 hrs</textarea>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
+                        <i data-lucide="cloud-sun" class="w-3.5 h-3.5"></i> Weather
+                    </label>
+                    <textarea id="weather" rows="2" placeholder="Current/Expected Conditions" oninput="saveData()" spellcheck="true" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none"></textarea>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500">Shift On Ops</label>
+                    <select id="shiftOps" onchange="saveData()" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                        <option value="">Select Shift</option>
+                        <option value="A Shift">A Shift</option>
+                        <option value="B Shift">B Shift</option>
+                        <option value="C Shift">C Shift</option>
+                        <option value="D Shift">D Shift</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-500">Training District Chiefs (Contact by 0730hrs)</label>
+                    <textarea id="districtChiefs" rows="1" oninput="saveData()" spellcheck="true" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+                </div>
+            </section>
+
+            <hr class="border-slate-100 no-print">
+
+            <!-- Programs and Staffing -->
+            <section class="space-y-6">
+                <h2 class="text-lg font-bold text-slate-800 border-l-4 border-red-600 pl-3 uppercase tracking-wide">Programs & Staffing</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase text-slate-500">Today’s Programs</label>
+                        <textarea id="programs" rows="8" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold uppercase text-slate-500">RTFD Staff & Assignments</label>
+                            <textarea id="rtfd" rows="5" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none bg-slate-50"></textarea>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold uppercase text-slate-500">Modified Staff & Assignments</label>
+                            <textarea id="modified" rows="5" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none bg-slate-50"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Roundtable Section -->
+            <section class="space-y-6">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-lg font-bold text-slate-800 border-l-4 border-red-600 pl-3 uppercase tracking-wide">Training Officer Roundtable</h2>
+                    <i data-lucide="users" class="text-slate-400 w-5 h-5 no-print"></i>
+                </div>
+                <div id="roundtable-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- JS will inject officers here -->
+                </div>
+            </section>
+
+            <!-- Leadership & Logistics -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-slate-100">
+                <div class="space-y-6">
+                    <h2 class="text-lg font-bold text-slate-800 border-l-4 border-red-600 pl-3 uppercase tracking-wide">Leadership</h2>
+                    <div class="space-y-4">
+                        
+                        <!-- SC Flavell Block -->
+                        <div>
+                            <label class="text-xs font-bold uppercase text-slate-500 mb-2 block">Section Chief Flavell</label>
+                            <textarea id="leadership_flavell" rows="2" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+                        </div>
+                        
+                        <!-- SC Johnson Block -->
+                        <div>
+                            <label class="text-xs font-bold uppercase text-slate-500 mb-2 block">Section Chief Johnson</label>
+                            <textarea id="leadership_johnson" rows="2" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+                        </div>
+                        
+                        <div class="pt-2">
+                            <label class="text-xs font-bold uppercase text-slate-500 mb-2 block">District Chief Requests</label>
+                            <textarea id="dcRequests" rows="2" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-bold text-slate-800 border-l-4 border-red-600 pl-3 uppercase tracking-wide">Vehicle Status</h2>
+                        <i data-lucide="truck" class="text-slate-400 w-5 h-5 no-print"></i>
+                    </div>
+                    <div class="space-y-3" id="vehicle-list">
+                        <!-- JS will inject vehicles here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action Items -->
+            <section class="bg-slate-900 text-white p-6 rounded-xl space-y-4">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i data-lucide="save" class="w-5 h-5"></i> Actionable Items & Closing
+                </h2>
+                <div class="space-y-3" id="action-items-list">
+                    <!-- JS will inject action items here -->
+                </div>
+            </section>
+        </div>
+
+        <footer class="bg-slate-50 p-4 text-center text-xs text-slate-400 border-t border-slate-100 no-print">
+            MFES Training Division Dashboard • Auto-saves to this browser
+        </footer>
+    </div>
+
+    <!-- Custom Modal for Confirmation -->
+    <div id="resetModal" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full space-y-4">
+            <h3 class="text-xl font-bold text-slate-800">Clear all data?</h3>
+            <p class="text-slate-600">This will remove all current entries for today's briefing. This action cannot be undone.</p>
+            <div class="flex gap-3 pt-2">
+                <button onclick="toggleModal(false)" class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors">Cancel</button>
+                <button onclick="resetForm()" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">Clear Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const officers = [
+            "Conway", "Doucette", "Dunec", "French", "Haight", "Herd", "Jaeger",
+            "Lanigan", "McComb", "Nielsen", "Norwich", "Pike", "Quaidoo", "Reid", "Taylor", "Van de Laar"
+        ];
+        const vehicles = ["C181", "C182", "C183"];
+
+        function init() {
+            // Render Officers
+            const grid = document.getElementById('roundtable-grid');
+            officers.forEach(name => {
+                const div = document.createElement('div');
+                div.className = "p-3 border border-slate-100 bg-slate-50 rounded-lg hover:border-red-200 transition-colors";
+                div.innerHTML = `
+                    <label class="block text-xs font-bold text-slate-700 mb-1">${name}</label>
+                    <textarea id="officer_${name}" placeholder="Notes..." rows="1" oninput="saveData()" spellcheck="true"
+                        class="w-full text-sm bg-transparent border-b border-slate-200 focus:border-red-500 outline-none resize-none"></textarea>
+                `;
+                grid.appendChild(div);
+            });
+
+            // Render Vehicles
+            const vList = document.getElementById('vehicle-list');
+            vehicles.forEach(unit => {
+                const div = document.createElement('div');
+                div.className = "flex flex-col gap-1 p-3 border border-slate-100 rounded-lg";
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-slate-700">${unit}</span>
+                        <select id="v_status_${unit}" onchange="saveData()" class="text-xs font-bold px-2 py-1 rounded bg-slate-100 border-none outline-none cursor-pointer">
+                            <option value="Available">Available</option>
+                            <option value="OOS">OOS</option>
+                            <option value="Reserved">Reserved</option>
+                        </select>
+                    </div>
+                    <textarea id="v_notes_${unit}" rows="1" placeholder="Location/Notes" oninput="saveData()" spellcheck="true"
+                        class="text-sm bg-transparent border-b border-slate-100 focus:border-red-500 outline-none py-1"></textarea>
+                `;
+                vList.appendChild(div);
+            });
+
+            // Render Action Items
+            const aList = document.getElementById('action-items-list');
+            for(let i=0; i<3; i++) {
+                const div = document.createElement('div');
+                div.className = "flex items-start gap-3";
+                div.innerHTML = `
+                    <input type="checkbox" id="a_check_${i}" onchange="saveData()" class="w-5 h-5 mt-0.5 rounded border-slate-700 accent-red-500 no-print">
+                    <textarea id="a_text_${i}" rows="1" placeholder="Enter action item..." oninput="saveData()" spellcheck="true"
+                        class="flex-1 bg-transparent border-b border-slate-700 focus:border-red-500 outline-none text-slate-100 print:text-slate-100 py-0.5"></textarea>
+                `;
+                aList.appendChild(div);
+            }
+
+            // Load saved data
+            loadData();
+            lucide.createIcons();
+
+            // Auto-resize textareas to fit content so nothing is cut off in PDF
+            const resizeTextareas = () => {
+                document.querySelectorAll('textarea').forEach(el => {
+                    el.style.height = 'auto';
+                    el.style.height = el.scrollHeight + 'px';
+                });
+            };
+
+            document.querySelectorAll('textarea').forEach(el => {
+                el.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = this.scrollHeight + 'px';
+                });
+            });
+
+            // Initial resize to fit loaded data
+            setTimeout(resizeTextareas, 100);
+
+            // Set default date to today
+            if(!document.getElementById('date').value) {
+                document.getElementById('date').value = new Date().toISOString().split('T')[0];
+            }
+        }
+
+        function saveData() {
+            const data = {};
+            // Basic fields
+            ['date', 'time', 'weather', 'shiftOps', 'districtChiefs', 'programs', 'rtfd', 'modified', 'dcRequests', 'leadership_flavell', 'leadership_johnson'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) data[id] = el.value;
+            });
+            // Officers
+            officers.forEach(name => {
+                const el = document.getElementById(`officer_${name}`);
+                if (el) data[`officer_${name}`] = el.value;
+            });
+            // Vehicles
+            vehicles.forEach(unit => {
+                const select = document.getElementById(`v_status_${unit}`);
+                const notes = document.getElementById(`v_notes_${unit}`);
+                if (select) data[`v_status_${unit}`] = select.value;
+                if (notes) data[`v_notes_${unit}`] = notes.value;
+                
+                // Update vehicle styling
+                if(select) {
+                    select.classList.remove('bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700', 'bg-yellow-100', 'text-yellow-700');
+                    if(select.value === 'Available') select.classList.add('bg-green-100', 'text-green-700');
+                    if(select.value === 'OOS') select.classList.add('bg-red-100', 'text-red-700');
+                    if(select.value === 'Reserved') select.classList.add('bg-yellow-100', 'text-yellow-700');
+                }
+            });
+            // Actions
+            for(let i=0; i<3; i++) {
+                const check = document.getElementById(`a_check_${i}`);
+                const text = document.getElementById(`a_text_${i}`);
+                if (check) data[`a_check_${i}`] = check.checked;
+                if (text) data[`a_text_${i}`] = text.value;
+            }
+
+            localStorage.setItem('mfes_dashboard_v1', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('mfes_dashboard_v1');
+            if(!saved) return;
+            const data = JSON.parse(saved);
+            
+            Object.keys(data).forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    if(el.type === 'checkbox') el.checked = data[id];
+                    else el.value = data[id];
+                }
+            });
+            // Re-run color updates for vehicles
+            vehicles.forEach(unit => {
+                const select = document.getElementById(`v_status_${unit}`);
+                if(select) {
+                    if(select.value === 'Available') select.classList.add('bg-green-100', 'text-green-700');
+                    if(select.value === 'OOS') select.classList.add('bg-red-100', 'text-red-700');
+                    if(select.value === 'Reserved') select.classList.add('bg-yellow-100', 'text-yellow-700');
+                }
+            });
+        }
+
+        function toggleModal(show) {
+            const modal = document.getElementById('resetModal');
+            if (show) {
+                modal.classList.add('modal-active');
+            } else {
+                modal.classList.remove('modal-active');
+            }
+        }
+
+        function resetForm() {
+            localStorage.removeItem('mfes_dashboard_v1');
+            location.reload();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
