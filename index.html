@@ -36,7 +36,6 @@
 
             /* PREVENT BOX BREAKING */
             section, 
-            .grid > div, 
             header,
             .bg-slate-900 {
                 break-inside: avoid !important;
@@ -79,7 +78,10 @@
             .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
             .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
             .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+            .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
             .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+            .lg\:col-span-2 { grid-column: span 2 / span 2 !important; }
+            .lg\:col-span-1 { grid-column: span 1 / span 1 !important; }
             
             /* Tighten gaps and padding slightly to ensure everything fits cleanly */
             .gap-6 { gap: 1rem !important; }
@@ -134,41 +136,58 @@
         <div class="p-6 md:p-8 space-y-8">
             
             <!-- Quick Stats / Logistics -->
-            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
-                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Meeting Date
-                    </label>
-                    <input type="date" id="date" oninput="saveData()" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Left/Middle Panel: Date, Time, Shift, Chiefs -->
+                <div class="lg:col-span-2 flex flex-col gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex flex-col h-full">
+                            <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2 mb-2">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Today's Date
+                            </label>
+                            <input type="date" id="date" oninput="handleDateChange()" class="mt-auto w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                        <div class="flex flex-col h-full">
+                            <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2 mb-2">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i> Time
+                            </label>
+                            <textarea id="time" rows="1" oninput="saveData()" spellcheck="true" class="mt-auto w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">0710 hrs</textarea>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex flex-col h-full">
+                            <label class="text-xs font-bold uppercase text-slate-500 mb-2">Shift On Ops</label>
+                            <select id="shiftOps" onchange="saveData()" class="mt-auto w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                                <option value="">Select Shift</option>
+                                <option value="A Shift">A Shift</option>
+                                <option value="B Shift">B Shift</option>
+                                <option value="C Shift">C Shift</option>
+                                <option value="D Shift">D Shift</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col h-full">
+                            <label class="text-xs font-bold uppercase text-slate-500 mb-2">Training District Chiefs (Contact by 0730hrs)</label>
+                            <textarea id="districtChiefs" rows="1" oninput="saveData()" spellcheck="true" class="mt-auto w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+                        </div>
+                    </div>
                 </div>
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
-                        <i data-lucide="clock" class="w-3.5 h-3.5"></i> Time
-                    </label>
-                    <textarea id="time" rows="1" oninput="saveData()" spellcheck="true" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">0710 hrs</textarea>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
-                        <i data-lucide="cloud-sun" class="w-3.5 h-3.5"></i> Weather
-                    </label>
-                    <textarea id="weather" rows="2" placeholder="Current/Expected Conditions" oninput="saveData()" spellcheck="true" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none"></textarea>
-                </div>
-            </section>
 
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500">Shift On Ops</label>
-                    <select id="shiftOps" onchange="saveData()" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none bg-white">
-                        <option value="">Select Shift</option>
-                        <option value="A Shift">A Shift</option>
-                        <option value="B Shift">B Shift</option>
-                        <option value="C Shift">C Shift</option>
-                        <option value="D Shift">D Shift</option>
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-slate-500">Training District Chiefs (Contact by 0730hrs)</label>
-                    <textarea id="districtChiefs" rows="1" oninput="saveData()" spellcheck="true" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+                <!-- Right Panel: Weather -->
+                <div class="lg:col-span-1 space-y-2 flex flex-col h-full">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
+                            <i data-lucide="cloud-sun" class="w-3.5 h-3.5"></i> Weather
+                        </label>
+                        <button onclick="fetchWeather()" id="fetch-weather-btn" class="text-red-500 hover:text-red-700 transition-colors no-print flex items-center gap-1 text-xs font-bold bg-red-50 px-2 py-1 rounded" title="Auto-fill Mississauga Weather">
+                            <i data-lucide="refresh-cw" class="w-3 h-3"></i> Auto-Fill
+                        </button>
+                    </div>
+                    <!-- Set default rows to 4 so it balances beautifully with the left side immediately -->
+                    <textarea id="weather" rows="4" placeholder="Current/Expected Conditions" oninput="saveData()" spellcheck="true" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none transition-colors flex-grow"></textarea>
+                    <div id="weather-warning" class="hidden text-red-600 text-xs font-bold mt-1 flex items-start gap-1 animate-pulse">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+                        <span>Verify Extreme Temperatures with The Weather Network.</span>
+                    </div>
                 </div>
             </section>
 
@@ -277,8 +296,49 @@
         ];
         const vehicles = ["C181", "C182", "C183"];
 
+        function handleDateChange() {
+            autoSelectShift();
+            saveData();
+        }
+
+        function autoSelectShift() {
+            const dateInput = document.getElementById('date').value;
+            if (!dateInput) return;
+
+            const [year, month, day] = dateInput.split('-').map(Number);
+            
+            // Anchor date: May 1, 2026 (Cycle Day 1 - C Shift)
+            // Using UTC ensures daylight saving time changes don't offset the calculation
+            const anchorDate = Date.UTC(2026, 4, 1); // 4 = May (0-indexed month)
+            const targetDate = Date.UTC(year, month - 1, day);
+            
+            const diffDays = Math.floor((targetDate - anchorDate) / (1000 * 60 * 60 * 24));
+            
+            // Handle negative differences gracefully for dates prior to May 1, 2026
+            let cycleDay = diffDays % 28;
+            if (cycleDay < 0) cycleDay += 28;
+
+            // Full 28-day perpetual pattern mapped from user's May 2026 schedule
+            const shiftCycle = [
+                'C', 'D', 'C', 'B', 'D', 'C', 'B', 'A',
+                'C', 'A', 'D', 'C', 'A', 'D', 'B', 'A',
+                'B', 'C', 'A', 'B', 'C', 'D', 'B', 'D',
+                'A', 'B', 'D', 'A'
+            ];
+
+            const shift = shiftCycle[cycleDay] + ' Shift';
+
+            const shiftSelect = document.getElementById('shiftOps');
+            if (shiftSelect) {
+                shiftSelect.value = shift;
+            }
+        }
+
         function setupPrintMirrors() {
             document.querySelectorAll('textarea').forEach(el => {
+                // Safely prevent duplicate mirrors if this is somehow called twice
+                if (el.nextElementSibling && el.nextElementSibling.classList.contains('print-mirror')) return;
+
                 const mirror = document.createElement('div');
                 
                 // Clone the textarea's classes for identical styling
@@ -294,11 +354,17 @@
                 el.classList.add('print:hidden');
                 
                 // Insert into DOM right after the textarea
-                el.parentNode.insertBefore(mirror, el.nextSibling);
+                if (el.parentNode) {
+                    el.parentNode.insertBefore(mirror, el.nextSibling);
+                }
                 
                 // Sync content function
                 const syncMirror = () => {
                     mirror.textContent = el.value || '\u00A0'; // Use non-breaking space if empty to hold line height
+                    // Sync classes to ensure background colors (like weather warnings) map to the print mirror
+                    mirror.className = el.className;
+                    mirror.classList.remove('resize-none', 'overflow-hidden');
+                    mirror.classList.add('hidden', 'print:block', 'whitespace-pre-wrap', 'break-words', 'print-mirror', 'h-auto');
                 };
                 
                 // Keep synced whenever user types
@@ -308,171 +374,402 @@
         }
 
         function init() {
-            // Render Officers
-            const grid = document.getElementById('roundtable-grid');
-            officers.forEach(name => {
-                const div = document.createElement('div');
-                div.className = "p-3 border border-slate-100 bg-slate-50 rounded-lg hover:border-red-200 transition-colors";
-                div.innerHTML = `
-                    <label class="block text-xs font-bold text-slate-700 mb-1">${name}</label>
-                    <textarea id="officer_${name}" placeholder="Notes..." rows="1" oninput="saveData()" spellcheck="true"
-                        class="w-full text-sm bg-transparent border-b border-slate-200 focus:border-red-500 outline-none resize-none"></textarea>
-                `;
-                grid.appendChild(div);
-            });
+            try {
+                // Render Officers
+                const grid = document.getElementById('roundtable-grid');
+                if (grid && grid.children.length === 0) { // Prevent double-rendering
+                    officers.forEach(name => {
+                        const div = document.createElement('div');
+                        div.className = "p-3 border border-slate-100 bg-slate-50 rounded-lg hover:border-red-200 transition-colors";
+                        div.innerHTML = `
+                            <label class="block text-xs font-bold text-slate-700 mb-1">${name}</label>
+                            <textarea id="officer_${name}" placeholder="Notes..." rows="1" oninput="saveData()" spellcheck="true"
+                                class="w-full text-sm bg-transparent border-b border-slate-200 focus:border-red-500 outline-none resize-none"></textarea>
+                        `;
+                        grid.appendChild(div);
+                    });
+                }
 
-            // Render Vehicles
-            const vList = document.getElementById('vehicle-list');
-            vehicles.forEach(unit => {
-                const div = document.createElement('div');
-                div.className = "flex flex-col gap-1 p-3 border border-slate-100 rounded-lg";
-                div.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700">${unit}</span>
-                        <select id="v_status_${unit}" onchange="saveData()" class="text-xs font-bold px-2 py-1 rounded bg-slate-100 border-none outline-none cursor-pointer">
-                            <option value="Available">Available</option>
-                            <option value="OOS">OOS</option>
-                            <option value="Reserved">Reserved</option>
-                        </select>
-                    </div>
-                    <textarea id="v_notes_${unit}" rows="1" placeholder="Location/Notes" oninput="saveData()" spellcheck="true"
-                        class="text-sm bg-transparent border-b border-slate-100 focus:border-red-500 outline-none py-1"></textarea>
-                `;
-                vList.appendChild(div);
-            });
+                // Render Vehicles
+                const vList = document.getElementById('vehicle-list');
+                if (vList && vList.children.length === 0) {
+                    vehicles.forEach(unit => {
+                        const div = document.createElement('div');
+                        div.className = "flex flex-col gap-1 p-3 border border-slate-100 rounded-lg";
+                        div.innerHTML = `
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-slate-700">${unit}</span>
+                                <select id="v_status_${unit}" onchange="saveData()" class="text-xs font-bold px-2 py-1 rounded bg-slate-100 border-none outline-none cursor-pointer">
+                                    <option value="Available">Available</option>
+                                    <option value="OOS">OOS</option>
+                                    <option value="Reserved">Reserved</option>
+                                </select>
+                            </div>
+                            <textarea id="v_notes_${unit}" rows="1" placeholder="Location/Notes" oninput="saveData()" spellcheck="true"
+                                class="text-sm bg-transparent border-b border-slate-100 focus:border-red-500 outline-none py-1"></textarea>
+                        `;
+                        vList.appendChild(div);
+                    });
+                }
 
-            // Render Action Items
-            const aList = document.getElementById('action-items-list');
-            for(let i=0; i<3; i++) {
-                const div = document.createElement('div');
-                div.className = "flex items-start gap-3";
-                div.innerHTML = `
-                    <input type="checkbox" id="a_check_${i}" onchange="saveData()" class="w-5 h-5 mt-0.5 rounded border-slate-700 accent-red-500 no-print">
-                    <textarea id="a_text_${i}" rows="1" placeholder="Enter action item..." oninput="saveData()" spellcheck="true"
-                        class="flex-1 bg-transparent border-b border-slate-700 focus:border-red-500 outline-none text-slate-100 print:text-slate-100 py-0.5"></textarea>
-                `;
-                aList.appendChild(div);
-            }
-
-            // Load saved data
-            loadData();
-            lucide.createIcons();
-
-            // Create print mirrors for textareas to prevent PDF text cutoff
-            setupPrintMirrors();
-
-            // Auto-resize textareas to fit content for screen view
-            const resizeTextareas = () => {
-                document.querySelectorAll('textarea').forEach(el => {
-                    el.style.height = 'auto';
-                    el.style.height = el.scrollHeight + 'px';
-                });
-            };
-
-            document.querySelectorAll('textarea').forEach(el => {
-                el.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = this.scrollHeight + 'px';
-                });
-            });
-
-            // Initial resize to fit loaded data
-            setTimeout(resizeTextareas, 100);
-
-            // Ensure precise sizing right before printing
-            window.addEventListener('beforeprint', () => {
-                resizeTextareas();
-                // Final sync of mirrors to guarantee accuracy before the print dialog opens
-                document.querySelectorAll('textarea').forEach(el => {
-                    const mirror = el.nextElementSibling;
-                    if (mirror && mirror.classList.contains('print-mirror')) {
-                        mirror.textContent = el.value || '\u00A0';
+                // Render Action Items
+                const aList = document.getElementById('action-items-list');
+                if (aList && aList.children.length === 0) {
+                    for(let i=0; i<3; i++) {
+                        const div = document.createElement('div');
+                        div.className = "flex items-start gap-3";
+                        div.innerHTML = `
+                            <input type="checkbox" id="a_check_${i}" onchange="saveData()" class="w-5 h-5 mt-0.5 rounded border-slate-700 accent-red-500 no-print">
+                            <textarea id="a_text_${i}" rows="1" placeholder="Enter action item..." oninput="saveData()" spellcheck="true"
+                                class="flex-1 bg-transparent border-b border-slate-700 focus:border-red-500 outline-none text-slate-100 print:text-slate-100 py-0.5"></textarea>
+                        `;
+                        aList.appendChild(div);
                     }
-                });
-            });
+                }
 
-            // Set default date to today
-            if(!document.getElementById('date').value) {
-                document.getElementById('date').value = new Date().toISOString().split('T')[0];
+                // Load saved data
+                loadData();
+                
+                // Safely load icons to prevent crashes if CDN is delayed
+                if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+                    lucide.createIcons();
+                }
+
+                // Create print mirrors for textareas to prevent PDF text cutoff
+                setupPrintMirrors();
+
+                // Auto-resize textareas to fit content for screen view
+                const resizeTextareas = () => {
+                    document.querySelectorAll('textarea').forEach(el => {
+                        el.style.height = 'auto';
+                        el.style.height = el.scrollHeight + 'px';
+                    });
+                };
+
+                document.querySelectorAll('textarea').forEach(el => {
+                    el.addEventListener('input', function() {
+                        this.style.height = 'auto';
+                        this.style.height = this.scrollHeight + 'px';
+                    });
+                });
+
+                // Initial resize to fit loaded data
+                setTimeout(resizeTextareas, 100);
+
+                // Ensure precise sizing right before printing
+                window.addEventListener('beforeprint', () => {
+                    resizeTextareas();
+                    // Final sync of mirrors to guarantee accuracy before the print dialog opens
+                    document.querySelectorAll('textarea').forEach(el => {
+                        const mirror = el.nextElementSibling;
+                        if (mirror && mirror.classList.contains('print-mirror')) {
+                            mirror.textContent = el.value || '\u00A0';
+                        }
+                    });
+                });
+
+                // Set default date to today safely and auto-fill shift
+                const dateEl = document.getElementById('date');
+                if(dateEl && !dateEl.value) {
+                    dateEl.value = new Date().toISOString().split('T')[0];
+                    autoSelectShift();
+                    saveData();
+                }
+            } catch (initError) {
+                console.error("Initialization error caught, preventing full crash:", initError);
             }
         }
 
         function saveData() {
-            const data = {};
-            // Basic fields
-            ['date', 'time', 'weather', 'shiftOps', 'districtChiefs', 'programs', 'rtfd', 'modified', 'dcRequests', 'leadership_flavell', 'leadership_johnson'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) data[id] = el.value;
-            });
-            // Officers
-            officers.forEach(name => {
-                const el = document.getElementById(`officer_${name}`);
-                if (el) data[`officer_${name}`] = el.value;
-            });
-            // Vehicles
-            vehicles.forEach(unit => {
-                const select = document.getElementById(`v_status_${unit}`);
-                const notes = document.getElementById(`v_notes_${unit}`);
-                if (select) data[`v_status_${unit}`] = select.value;
-                if (notes) data[`v_notes_${unit}`] = notes.value;
-                
-                // Update vehicle styling
-                if(select) {
-                    select.classList.remove('bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700', 'bg-yellow-100', 'text-yellow-700');
-                    if(select.value === 'Available') select.classList.add('bg-green-100', 'text-green-700');
-                    if(select.value === 'OOS') select.classList.add('bg-red-100', 'text-red-700');
-                    if(select.value === 'Reserved') select.classList.add('bg-yellow-100', 'text-yellow-700');
+            try {
+                const data = {};
+                // Basic fields
+                ['date', 'time', 'weather', 'shiftOps', 'districtChiefs', 'programs', 'rtfd', 'modified', 'dcRequests', 'leadership_flavell', 'leadership_johnson'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) data[id] = el.value;
+                });
+                // Officers
+                officers.forEach(name => {
+                    const el = document.getElementById(`officer_${name}`);
+                    if (el) data[`officer_${name}`] = el.value;
+                });
+                // Vehicles
+                vehicles.forEach(unit => {
+                    const select = document.getElementById(`v_status_${unit}`);
+                    const notes = document.getElementById(`v_notes_${unit}`);
+                    if (select) data[`v_status_${unit}`] = select.value;
+                    if (notes) data[`v_notes_${unit}`] = notes.value;
+                    
+                    // Update vehicle styling
+                    if(select) {
+                        select.classList.remove('bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700', 'bg-yellow-100', 'text-yellow-700');
+                        if(select.value === 'Available') select.classList.add('bg-green-100', 'text-green-700');
+                        if(select.value === 'OOS') select.classList.add('bg-red-100', 'text-red-700');
+                        if(select.value === 'Reserved') select.classList.add('bg-yellow-100', 'text-yellow-700');
+                    }
+                });
+                // Actions
+                for(let i=0; i<3; i++) {
+                    const check = document.getElementById(`a_check_${i}`);
+                    const text = document.getElementById(`a_text_${i}`);
+                    if (check) data[`a_check_${i}`] = check.checked;
+                    if (text) data[`a_text_${i}`] = text.value;
                 }
-            });
-            // Actions
-            for(let i=0; i<3; i++) {
-                const check = document.getElementById(`a_check_${i}`);
-                const text = document.getElementById(`a_text_${i}`);
-                if (check) data[`a_check_${i}`] = check.checked;
-                if (text) data[`a_text_${i}`] = text.value;
-            }
 
-            localStorage.setItem('mfes_dashboard_v1', JSON.stringify(data));
+                // Save Weather Alert State
+                const weatherBox = document.getElementById('weather');
+                let weatherAlert = 'none';
+                if (weatherBox) {
+                    if (weatherBox.classList.contains('bg-red-50')) weatherAlert = 'red';
+                    else if (weatherBox.classList.contains('bg-orange-50')) weatherAlert = 'orange';
+                    else if (weatherBox.classList.contains('bg-blue-50')) weatherAlert = 'blue';
+                }
+                data['weather_alert'] = weatherAlert;
+
+                // Wrap in try-catch to prevent crashes in restricted preview environments
+                localStorage.setItem('mfes_dashboard_v1', JSON.stringify(data));
+            } catch (e) {
+                console.warn("Local storage is disabled or blocked. Auto-save paused.");
+            }
         }
 
         function loadData() {
-            const saved = localStorage.getItem('mfes_dashboard_v1');
-            if(!saved) return;
-            const data = JSON.parse(saved);
+            try {
+                const saved = localStorage.getItem('mfes_dashboard_v1');
+                if(!saved) return;
+                const data = JSON.parse(saved);
+                
+                Object.keys(data).forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        if(el.type === 'checkbox') el.checked = data[id];
+                        else el.value = data[id];
+                    }
+                });
+
+                // Restore Weather Alert State
+                const wBox = document.getElementById('weather');
+                const wWarn = document.getElementById('weather-warning');
+                if (wBox && wWarn && data['weather_alert']) {
+                    wBox.classList.remove('bg-red-50', 'border-red-500', 'bg-orange-50', 'border-orange-500', 'bg-blue-50', 'border-blue-500');
+                    if (data['weather_alert'] === 'red') {
+                        wBox.classList.add('bg-red-50', 'border-red-500');
+                        wWarn.classList.remove('hidden');
+                    } else if (data['weather_alert'] === 'orange') {
+                        wBox.classList.add('bg-orange-50', 'border-orange-500');
+                        wWarn.classList.remove('hidden');
+                    } else if (data['weather_alert'] === 'blue') {
+                        wBox.classList.add('bg-blue-50', 'border-blue-500');
+                        wWarn.classList.remove('hidden');
+                    } else {
+                        wWarn.classList.add('hidden');
+                    }
+                }
+
+                // Re-run color updates for vehicles
+                vehicles.forEach(unit => {
+                    const select = document.getElementById(`v_status_${unit}`);
+                    if(select) {
+                        if(select.value === 'Available') select.classList.add('bg-green-100', 'text-green-700');
+                        if(select.value === 'OOS') select.classList.add('bg-red-100', 'text-red-700');
+                        if(select.value === 'Reserved') select.classList.add('bg-yellow-100', 'text-yellow-700');
+                    }
+                });
+            } catch (e) {
+                console.warn("Local storage is disabled or blocked. Auto-load paused.");
+            }
+        }
+
+        // --- WEATHER API INTEGRATION ---
+        const WMO_CODES = {
+            0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+            45: 'Fog', 48: 'Freezing fog', 51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+            61: 'Light rain', 63: 'Moderate rain', 65: 'Heavy rain',
+            71: 'Light snow', 73: 'Moderate snow', 75: 'Heavy snow',
+            77: 'Snow grains', 80: 'Light showers', 81: 'Moderate showers', 82: 'Violent showers',
+            85: 'Light snow showers', 86: 'Heavy snow showers', 95: 'Thunderstorm', 96: 'Thunderstorm with light hail', 99: 'Thunderstorm with heavy hail'
+        };
+
+        function getWindDir(deg) {
+            if (deg >= 337.5 || deg < 22.5) return 'N';
+            if (deg >= 22.5 && deg < 67.5) return 'NE';
+            if (deg >= 67.5 && deg < 112.5) return 'E';
+            if (deg >= 112.5 && deg < 157.5) return 'SE';
+            if (deg >= 157.5 && deg < 202.5) return 'S';
+            if (deg >= 202.5 && deg < 247.5) return 'SW';
+            if (deg >= 247.5 && deg < 292.5) return 'W';
+            return 'NW';
+        }
+
+        function getAQIRating(aqi) {
+            if (aqi <= 50) return 'Good';
+            if (aqi <= 100) return 'Moderate';
+            if (aqi <= 150) return 'Unhealthy for Sensitive Grps';
+            if (aqi <= 200) return 'Unhealthy';
+            if (aqi <= 300) return 'Very Unhealthy';
+            return 'Hazardous';
+        }
+
+        function getUVRating(uv) {
+            if (uv <= 2) return 'Low';
+            if (uv <= 5) return 'Moderate';
+            if (uv <= 7) return 'High';
+            if (uv <= 10) return 'Very High';
+            return 'Extreme';
+        }
+
+        async function fetchWeather() {
+            const btn = document.getElementById('fetch-weather-btn');
+            const icon = btn.querySelector('i');
+            const weatherBox = document.getElementById('weather');
             
-            Object.keys(data).forEach(id => {
-                const el = document.getElementById(id);
-                if(el) {
-                    if(el.type === 'checkbox') el.checked = data[id];
-                    else el.value = data[id];
+            // Visual feedback
+            if (icon) icon.classList.add('animate-spin');
+            if (weatherBox) weatherBox.value = "Fetching weather data for Mississauga...";
+            
+            try {
+                // Mississauga Coordinates
+                const lat = 43.5890;
+                const lon = -79.6441;
+                
+                // Fetch Weather Data
+                const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max&timezone=America%2FNew_York`);
+                const wData = await wRes.json();
+                
+                // Fetch Air Quality Data
+                const aqRes = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi&timezone=America%2FNew_York`);
+                const aqData = await aqRes.json();
+
+                // Process Data
+                const cur = wData.current;
+                const daily = wData.daily;
+                const aq = aqData.current;
+
+                const curTemp = Math.round(cur.temperature_2m);
+                const curFeels = Math.round(cur.apparent_temperature);
+                const cond = WMO_CODES[cur.weather_code] || 'Unknown';
+                const high = Math.round(daily.temperature_2m_max[0]);
+                const highFeels = Math.round(daily.apparent_temperature_max[0]);
+                const low = Math.round(daily.temperature_2m_min[0]);
+                const lowFeels = Math.round(daily.apparent_temperature_min[0]);
+                const forecastCond = WMO_CODES[daily.weather_code[0]] || 'Unknown';
+                
+                const wSpeed = Math.round(cur.wind_speed_10m);
+                const wGust = Math.round(cur.wind_gusts_10m);
+                const wDir = getWindDir(cur.wind_direction_10m);
+                
+                const aqiVal = aq.us_aqi || 0;
+                const uvVal = Math.round(daily.uv_index_max[0]) || 0;
+
+                // Check Thresholds for Highlighting
+                const maxVal = Math.max(curTemp, curFeels, high, highFeels);
+                const minVal = Math.min(curTemp, curFeels, low, lowFeels);
+
+                let alertType = 'none';
+                if (maxVal >= 32) alertType = 'red';
+                else if (maxVal >= 29 && maxVal <= 31) alertType = 'orange';
+                else if (minVal <= -15) alertType = 'blue';
+
+                // Format the text
+                const formattedText = `Mississauga Weather:
+Current: ${curTemp}°C (Feels like ${curFeels}°C), ${cond}
+High: ${high}°C (Feels ${highFeels}°C) | Low: ${low}°C (Feels ${lowFeels}°C)
+Wind: ${wSpeed} km/h ${wDir} (Gusts to ${wGust} km/h)
+AQI: ${aqiVal} (${getAQIRating(aqiVal)}) | UV Index: ${uvVal} (${getUVRating(uvVal)})
+Today's Forecast: ${forecastCond}`;
+
+                // Inject and save
+                if (weatherBox) {
+                    // Update Styles
+                    const warningDiv = document.getElementById('weather-warning');
+                    weatherBox.classList.remove('bg-red-50', 'border-red-500', 'bg-orange-50', 'border-orange-500', 'bg-blue-50', 'border-blue-500');
+                    if (warningDiv) warningDiv.classList.add('hidden');
+
+                    if (alertType === 'red') {
+                        weatherBox.classList.add('bg-red-50', 'border-red-500');
+                        if (warningDiv) warningDiv.classList.remove('hidden');
+                    } else if (alertType === 'orange') {
+                        weatherBox.classList.add('bg-orange-50', 'border-orange-500');
+                        if (warningDiv) warningDiv.classList.remove('hidden');
+                    } else if (alertType === 'blue') {
+                        weatherBox.classList.add('bg-blue-50', 'border-blue-500');
+                        if (warningDiv) warningDiv.classList.remove('hidden');
+                    }
+
+                    weatherBox.value = formattedText;
+                    weatherBox.dispatchEvent(new Event('input')); // Triggers auto-resize and sync mirror
                 }
-            });
-            // Re-run color updates for vehicles
-            vehicles.forEach(unit => {
-                const select = document.getElementById(`v_status_${unit}`);
-                if(select) {
-                    if(select.value === 'Available') select.classList.add('bg-green-100', 'text-green-700');
-                    if(select.value === 'OOS') select.classList.add('bg-red-100', 'text-red-700');
-                    if(select.value === 'Reserved') select.classList.add('bg-yellow-100', 'text-yellow-700');
-                }
-            });
+                saveData();
+
+            } catch (err) {
+                console.error("Error fetching weather:", err);
+                if (weatherBox) weatherBox.value = "Error fetching weather data. Please enter manually.";
+            } finally {
+                if (icon) icon.classList.remove('animate-spin');
+            }
         }
 
         function toggleModal(show) {
             const modal = document.getElementById('resetModal');
-            if (show) {
-                modal.classList.add('modal-active');
-            } else {
-                modal.classList.remove('modal-active');
+            if (modal) {
+                if (show) {
+                    modal.classList.add('modal-active');
+                } else {
+                    modal.classList.remove('modal-active');
+                }
             }
         }
 
         function resetForm() {
-            localStorage.removeItem('mfes_dashboard_v1');
-            location.reload();
+            try {
+                localStorage.removeItem('mfes_dashboard_v1');
+            } catch (e) {
+                console.warn("Local storage is disabled in this environment.");
+            }
+            
+            // Safely clear all inputs manually instead of reloading the page (which crashes iframes)
+            document.querySelectorAll('input:not([type="checkbox"]), textarea, select').forEach(el => el.value = '');
+            document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+            
+            // Set default values back
+            const timeEl = document.getElementById('time');
+            if (timeEl) timeEl.value = '0710 hrs';
+            
+            const dateEl = document.getElementById('date');
+            if (dateEl) {
+                dateEl.value = new Date().toISOString().split('T')[0];
+                autoSelectShift(); // Recalculate shift for today
+            }
+
+            // Reset Weather colors
+            const weatherBox = document.getElementById('weather');
+            const weatherWarn = document.getElementById('weather-warning');
+            if (weatherBox) weatherBox.classList.remove('bg-red-50', 'border-red-500', 'bg-orange-50', 'border-orange-500', 'bg-blue-50', 'border-blue-500');
+            if (weatherWarn) weatherWarn.classList.add('hidden');
+
+            // Reset Vehicle colors
+            vehicles.forEach(unit => {
+                const select = document.getElementById(`v_status_${unit}`);
+                if (select) {
+                    select.value = 'Available';
+                    select.classList.remove('bg-red-100', 'text-red-700', 'bg-yellow-100', 'text-yellow-700');
+                    select.classList.add('bg-green-100', 'text-green-700');
+                }
+            });
+
+            // Close the modal and force textareas to resize/mirror correctly
+            toggleModal(false);
+            document.querySelectorAll('textarea').forEach(el => {
+                el.dispatchEvent(new Event('input'));
+            });
         }
 
-        window.onload = init;
+        // Initialize safely once the DOM is guaranteed ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 </body>
 </html>
