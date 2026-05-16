@@ -59,18 +59,19 @@
                 background-color: #f8fafc !important;
             }
 
-            input, textarea, select {
+            input, textarea, select, .print-mirror {
                 background-color: inherit !important;
                 border-color: #e2e8f0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
 
-            /* Ensure textareas don't look like empty boxes if they have content */
-            textarea {
-                resize: none !important;
-                overflow: visible !important;
-                height: auto !important;
+            /* Hide standard textareas and show expanding mirrors during print */
+            textarea.print\:hidden {
+                display: none !important;
+            }
+            div.print-mirror {
+                display: block !important;
             }
 
             /* FORCE DESKTOP LAYOUT IN PRINT (Overrides mobile-first print behavior) */
@@ -276,6 +277,36 @@
         ];
         const vehicles = ["C181", "C182", "C183"];
 
+        function setupPrintMirrors() {
+            document.querySelectorAll('textarea').forEach(el => {
+                const mirror = document.createElement('div');
+                
+                // Clone the textarea's classes for identical styling
+                mirror.className = el.className;
+                
+                // Remove structural classes that conflict with a div mirror
+                mirror.classList.remove('resize-none', 'overflow-hidden');
+                
+                // Add classes for print-only visibility and text wrapping
+                mirror.classList.add('hidden', 'print:block', 'whitespace-pre-wrap', 'break-words', 'print-mirror', 'h-auto');
+                
+                // Hide the actual textarea during print
+                el.classList.add('print:hidden');
+                
+                // Insert into DOM right after the textarea
+                el.parentNode.insertBefore(mirror, el.nextSibling);
+                
+                // Sync content function
+                const syncMirror = () => {
+                    mirror.textContent = el.value || '\u00A0'; // Use non-breaking space if empty to hold line height
+                };
+                
+                // Keep synced whenever user types
+                el.addEventListener('input', syncMirror);
+                syncMirror();
+            });
+        }
+
         function init() {
             // Render Officers
             const grid = document.getElementById('roundtable-grid');
@@ -327,7 +358,10 @@
             loadData();
             lucide.createIcons();
 
-            // Auto-resize textareas to fit content so nothing is cut off in PDF
+            // Create print mirrors for textareas to prevent PDF text cutoff
+            setupPrintMirrors();
+
+            // Auto-resize textareas to fit content for screen view
             const resizeTextareas = () => {
                 document.querySelectorAll('textarea').forEach(el => {
                     el.style.height = 'auto';
@@ -344,6 +378,18 @@
 
             // Initial resize to fit loaded data
             setTimeout(resizeTextareas, 100);
+
+            // Ensure precise sizing right before printing
+            window.addEventListener('beforeprint', () => {
+                resizeTextareas();
+                // Final sync of mirrors to guarantee accuracy before the print dialog opens
+                document.querySelectorAll('textarea').forEach(el => {
+                    const mirror = el.nextElementSibling;
+                    if (mirror && mirror.classList.contains('print-mirror')) {
+                        mirror.textContent = el.value || '\u00A0';
+                    }
+                });
+            });
 
             // Set default date to today
             if(!document.getElementById('date').value) {
