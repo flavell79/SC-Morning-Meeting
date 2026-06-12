@@ -204,8 +204,17 @@
                         <span>Verify Extreme Weather conditions and Hourly Projections with the Weather Network.</span>
                     </div>
 
+                    <!-- The Weather Network Link -->
+                    <a href="https://www.theweathernetwork.com/en/city/ca/ontario/mississauga/hourly" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3 mt-4 bg-blue-50 border border-blue-200 rounded-lg text-sm font-semibold text-blue-800 hover:bg-blue-100 transition-colors no-print group">
+                        <span class="flex items-center gap-2 text-xs uppercase tracking-wide">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            The Weather Network (Hourly)
+                        </span>
+                        <i data-lucide="arrow-up-right" class="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"></i>
+                    </a>
+
                     <!-- Weather Reference Collapsible -->
-                    <details class="group bg-slate-50 border border-slate-200 rounded-lg text-sm mt-4 no-print">
+                    <details class="group bg-slate-50 border border-slate-200 rounded-lg text-sm mt-2 no-print">
                         <summary class="flex items-center justify-between cursor-pointer p-3 font-semibold text-slate-700 hover:text-red-700 transition-colors select-none">
                             <span class="flex items-center gap-2 text-xs uppercase tracking-wide">
                                 <i data-lucide="info" class="w-3.5 h-3.5"></i>
@@ -854,7 +863,7 @@
                     else if (minVal <= -15) alertType = 'blue';
                     
                     if (maxWind > 50 && alertType === 'none') {
-                        alertType = 'orange'; // Warn for high winds if temp alert isn't active
+                        alertType = 'orange'; // Warn for high winds if temp alert isnt active
                     }
                 }
 
