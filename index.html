@@ -186,7 +186,19 @@
                     <textarea id="weather" rows="4" placeholder="Current/Expected Conditions" oninput="saveData()" spellcheck="true" class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none transition-colors flex-grow"></textarea>
                     <div id="weather-warning" class="hidden text-red-600 text-xs font-bold mt-1 flex items-start gap-1 animate-pulse">
                         <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
-                        <span>Verify Extreme Weather conditions with The Weather Network.</span>
+                        <span>Verify Extreme Weather conditions and Hourly Projections with the Weather Network.</span>
+                    </div>
+
+                    <!-- Hourly Forecast Wrapper -->
+                    <div id="hourly-forecast-wrapper" class="w-full mb-2"></div>
+                    
+                    <div id="hourly-heat-warning" class="hidden text-red-600 text-xs font-bold mt-2 flex items-start gap-1.5 animate-pulse bg-red-50 p-2 rounded border border-red-200">
+                        <i data-lucide="alert-octagon" class="w-4 h-4 shrink-0"></i>
+                        <span>DANGER: Temperatures reaching 32°C+. Verify Extreme Weather conditions and Hourly Projections with the Weather Network.</span>
+                    </div>
+                    <div id="hourly-cold-warning" class="hidden text-blue-600 text-xs font-bold mt-2 flex items-start gap-1.5 animate-pulse bg-blue-50 p-2 rounded border border-blue-200">
+                        <i data-lucide="snowflake" class="w-4 h-4 shrink-0"></i>
+                        <span>DANGER: Extreme Cold (-15°C or colder). Verify Extreme Weather conditions and Hourly Projections with the Weather Network.</span>
                     </div>
 
                     <!-- Weather Reference Collapsible -->
@@ -244,10 +256,13 @@
             </section>
 
             <!-- Roundtable Section -->
-            <section class="space-y-6">
-                <div class="flex items-center gap-2">
-                    <h2 class="text-lg font-bold text-slate-800 border-l-4 border-red-600 pl-3 uppercase tracking-wide">Training Officer Roundtable</h2>
-                    <i data-lucide="users" class="text-slate-400 w-5 h-5 no-print"></i>
+            <section class="space-y-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-bold text-slate-800 border-l-4 border-red-600 pl-3 uppercase tracking-wide">Training Officer Roundtable</h2>
+                        <i data-lucide="users" class="text-slate-400 w-5 h-5 no-print"></i>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium pl-4">Log daily assignments & responsibilities. Use <strong>"Off"</strong> for all leaves. No fields should be left blank.</p>
                 </div>
                 <div id="roundtable-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     <!-- JS will inject officers here -->
@@ -555,11 +570,83 @@
                 }
                 data['weather_alert'] = weatherAlert;
 
+                // Save Hourly HTML
+                const hourlyWrapper = document.getElementById('hourly-forecast-wrapper');
+                if (hourlyWrapper) {
+                    data['hourly_html'] = hourlyWrapper.innerHTML;
+                }
+
                 // Wrap in try-catch to prevent crashes in restricted preview environments
                 localStorage.setItem('mfes_dashboard_v1', JSON.stringify(data));
             } catch (e) {
                 console.warn("Local storage is disabled or blocked. Auto-save paused.");
             }
+        }
+
+        function checkGlobalHourlyWarnings() {
+            const blocks = document.querySelectorAll('.hourly-block');
+            let needsHeat = false;
+            let needsCold = false;
+            
+            blocks.forEach(block => {
+                if (block.classList.contains('border-red-500')) needsHeat = true;
+                if (block.classList.contains('border-blue-500') && block.classList.contains('text-blue-900')) needsCold = true;
+            });
+            
+            const heatWarn = document.getElementById('hourly-heat-warning');
+            const coldWarn = document.getElementById('hourly-cold-warning');
+            
+            if (heatWarn) {
+                if (needsHeat) heatWarn.classList.remove('hidden');
+                else heatWarn.classList.add('hidden');
+            }
+            
+            if (coldWarn) {
+                if (needsCold) coldWarn.classList.remove('hidden');
+                else coldWarn.classList.add('hidden');
+            }
+        }
+
+        function updateHourlyColor(inputEl) {
+            // Update value attribute so it saves into innerHTML correctly
+            inputEl.setAttribute('value', inputEl.value);
+            
+            const block = inputEl.closest('.hourly-block');
+            const tInput = block.querySelector('.hourly-t');
+            const flInput = block.querySelector('.hourly-fl');
+            
+            const t = isNaN(parseInt(tInput.value)) ? 0 : parseInt(tInput.value);
+            const fl = isNaN(parseInt(flInput.value)) ? 0 : parseInt(flInput.value);
+            
+            const dateInput = document.getElementById('date').value;
+            const targetMonth = dateInput ? parseInt(dateInput.split('-')[1], 10) : new Date().getMonth() + 1;
+            const isColdMonth = [12, 1, 2, 3, 4].includes(targetMonth);
+            
+            // Reset classes
+            block.className = 'hourly-block flex flex-col items-center justify-center p-1.5 rounded border text-xs shadow-sm transition-colors duration-300';
+            
+            if (isColdMonth) {
+                const minT = Math.min(t, fl);
+                if (minT <= -15) {
+                    block.classList.add('bg-blue-200', 'text-blue-900', 'border-blue-500', 'animate-pulse', 'font-bold');
+                } else if (minT <= -10) {
+                    block.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-400', 'font-bold');
+                } else {
+                    block.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+                }
+            } else {
+                const maxT = Math.max(t, fl); 
+                if (maxT >= 32) {
+                    block.classList.add('bg-red-200', 'text-red-900', 'border-red-500', 'animate-pulse', 'font-bold');
+                } else if (maxT >= 29) {
+                    block.classList.add('bg-orange-200', 'text-orange-900', 'border-orange-500', 'animate-pulse', 'font-bold');
+                } else {
+                    block.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+                }
+            }
+            
+            checkGlobalHourlyWarnings();
+            saveData();
         }
 
         function loadData() {
@@ -595,6 +682,13 @@
                     }
                 }
 
+                // Restore Hourly HTML
+                const hourlyWrapper = document.getElementById('hourly-forecast-wrapper');
+                if (hourlyWrapper && data['hourly_html']) {
+                    hourlyWrapper.innerHTML = data['hourly_html'];
+                    checkGlobalHourlyWarnings(); // Ensure warnings sync on load
+                }
+
                 // Re-run color updates for vehicles
                 vehicles.forEach(unit => {
                     const select = document.getElementById(`v_status_${unit}`);
@@ -609,34 +703,16 @@
             }
         }
 
-        // --- WEATHER API INTEGRATION ---
-        const WMO_CODES = {
-            0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
-            45: 'Fog', 48: 'Freezing fog', 51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
-            61: 'Light rain', 63: 'Moderate rain', 65: 'Heavy rain',
-            71: 'Light snow', 73: 'Moderate snow', 75: 'Heavy snow',
-            77: 'Snow grains', 80: 'Light showers', 81: 'Moderate showers', 82: 'Violent showers',
-            85: 'Light snow showers', 86: 'Heavy snow showers', 95: 'Thunderstorm', 96: 'Thunderstorm with light hail', 99: 'Thunderstorm with heavy hail'
-        };
+        // --- WEATHER API INTEGRATION (WeatherAPI.com) ---
+        // IMPORTANT: You need a free API key from weatherapi.com for commercial-grade accuracy.
+        const WEATHER_API_KEY = "c71e4f3f72c64bc8b15202356261206"; 
 
-        function getWindDir(deg) {
-            if (deg >= 337.5 || deg < 22.5) return 'N';
-            if (deg >= 22.5 && deg < 67.5) return 'NE';
-            if (deg >= 67.5 && deg < 112.5) return 'E';
-            if (deg >= 112.5 && deg < 157.5) return 'SE';
-            if (deg >= 157.5 && deg < 202.5) return 'S';
-            if (deg >= 202.5 && deg < 247.5) return 'SW';
-            if (deg >= 247.5 && deg < 292.5) return 'W';
-            return 'NW';
-        }
-
-        function getAQIRating(aqi) {
-            if (aqi <= 50) return 'Good';
-            if (aqi <= 100) return 'Moderate';
-            if (aqi <= 150) return 'Unhealthy for Sensitive Grps';
-            if (aqi <= 200) return 'Unhealthy';
-            if (aqi <= 300) return 'Very Unhealthy';
-            return 'Hazardous';
+        function getAQIRating(epaIndex) {
+            const ratings = {
+                1: 'Good', 2: 'Moderate', 3: 'Unhealthy for Sensitive Grps',
+                4: 'Unhealthy', 5: 'Very Unhealthy', 6: 'Hazardous'
+            };
+            return ratings[epaIndex] || 'Unknown';
         }
 
         function getUVRating(uv) {
@@ -654,63 +730,148 @@
             
             // Visual feedback
             if (icon) icon.classList.add('animate-spin');
+            
+            // Check if user has entered their API key
+            if (WEATHER_API_KEY === "YOUR_API_KEY_HERE") {
+                if (weatherBox) weatherBox.value = "⚠️ SETUP REQUIRED: To get accurate weather, please create a free account at WeatherAPI.com, get your API key, and paste it into the code where it says 'YOUR_API_KEY_HERE'.";
+                if (icon) icon.classList.remove('animate-spin');
+                return;
+            }
+
             if (weatherBox) weatherBox.value = "Fetching weather data for Mississauga...";
             
             try {
-                // Mississauga Coordinates
-                const lat = 43.5890;
-                const lon = -79.6441;
+                // Fetch from WeatherAPI.com
+                const wRes = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=Mississauga,Ontario&days=1&aqi=yes&alerts=no`);
                 
-                // Fetch Weather Data
-                const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max&timezone=America%2FNew_York`);
+                if (!wRes.ok) throw new Error("Failed to fetch weather. Check API key.");
                 const wData = await wRes.json();
                 
-                // Fetch Air Quality Data
-                const aqRes = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi&timezone=America%2FNew_York`);
-                const aqData = await aqRes.json();
-
                 // Process Data
                 const cur = wData.current;
-                const daily = wData.daily;
-                const aq = aqData.current;
+                const daily = wData.forecast.forecastday[0].day;
+                const hourlyData = wData.forecast.forecastday[0].hour;
 
-                const curTemp = Math.round(cur.temperature_2m);
-                const curFeels = Math.round(cur.apparent_temperature);
-                const cond = WMO_CODES[cur.weather_code] || 'Unknown';
-                const high = Math.round(daily.temperature_2m_max[0]);
-                const highFeels = Math.round(daily.apparent_temperature_max[0]);
-                const low = Math.round(daily.temperature_2m_min[0]);
-                const lowFeels = Math.round(daily.apparent_temperature_min[0]);
-                const forecastCond = WMO_CODES[daily.weather_code[0]] || 'Unknown';
+                const curTemp = Math.round(cur.temp_c);
+                const curFeels = Math.round(cur.feelslike_c);
+                const cond = cur.condition.text;
+                const high = Math.round(daily.maxtemp_c);
+                const low = Math.round(daily.mintemp_c);
+                const forecastCond = daily.condition.text;
                 
-                const wSpeed = Math.round(cur.wind_speed_10m);
-                const wGust = Math.round(cur.wind_gusts_10m);
-                const wDir = getWindDir(cur.wind_direction_10m);
+                const wSpeed = Math.round(cur.wind_kph);
+                const wGust = Math.round(cur.gust_kph);
+                const wDir = cur.wind_dir;
                 
-                const aqiVal = aq.us_aqi || 0;
-                const uvVal = Math.round(daily.uv_index_max[0]) || 0;
+                const aqiVal = cur.air_quality['us-epa-index'] || 1;
+                const uvVal = Math.round(cur.uv) || 0;
 
-                // Check Thresholds for Highlighting
+                // Find Max/Min Feels Like from hourly data for precise peak reporting
+                let highFeels = -100;
+                let lowFeels = 100;
+                hourlyData.forEach(h => {
+                    if (h.feelslike_c > highFeels) highFeels = h.feelslike_c;
+                    if (h.feelslike_c < lowFeels) lowFeels = h.feelslike_c;
+                });
+                highFeels = Math.round(highFeels);
+                lowFeels = Math.round(lowFeels);
+
+                const dateInput = document.getElementById('date').value;
+                const targetMonth = dateInput ? parseInt(dateInput.split('-')[1], 10) : new Date().getMonth() + 1;
+                // Active cold months: December (12), January (1), February (2), March (3), April (4)
+                const isColdMonth = [12, 1, 2, 3, 4].includes(targetMonth);
+
+                // Process Hourly Data (07:00 to 17:00)
+                let hourlyHtml = '<h3 class="text-xs font-bold text-slate-500 uppercase mb-2 mt-4 border-t pt-3 border-slate-200">Hourly Projections (0700 - 1700 hrs)</h3><div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">';
+
+                hourlyData.forEach((hourData) => {
+                    // Extract hour from "YYYY-MM-DD HH:MM" format
+                    const hourStr = hourData.time.split(' ')[1];
+                    const hour = parseInt(hourStr.split(':')[0], 10);
+                    
+                    if (hour >= 7 && hour <= 17) {
+                        const t = Math.round(hourData.temp_c);
+                        const fl = Math.round(hourData.feelslike_c);
+                        
+                        let classes = "bg-slate-50 text-slate-700 border-slate-200";
+
+                        if (isColdMonth) {
+                            const minT = Math.min(t, fl);
+                            if (minT <= -15) {
+                                classes = "bg-blue-200 text-blue-900 border-blue-500 animate-pulse font-bold";
+                            } else if (minT <= -10) {
+                                classes = "bg-blue-100 text-blue-800 border-blue-400 font-bold";
+                            }
+                        } else {
+                            const maxT = Math.max(t, fl); 
+                            if (maxT >= 32) {
+                                classes = "bg-red-200 text-red-900 border-red-500 animate-pulse font-bold";
+                            } else if (maxT >= 29) {
+                                classes = "bg-orange-200 text-orange-900 border-orange-500 animate-pulse font-bold";
+                            }
+                        }
+
+                        hourlyHtml += `
+                            <div class="hourly-block flex flex-col items-center justify-center p-1.5 rounded border ${classes} text-xs shadow-sm transition-colors duration-300">
+                                <span class="font-extrabold text-[10px] uppercase mb-0.5">${hourStr}</span>
+                                <div class="flex items-center justify-center font-bold">
+                                    <input type="text" value="${t}" class="w-7 text-center bg-transparent border-b border-transparent hover:border-slate-300 focus:border-red-500 outline-none hourly-t" oninput="updateHourlyColor(this)" maxlength="3"><span class="-ml-0.5">°C</span>
+                                </div>
+                                <div class="flex items-center justify-center text-[10px] opacity-90 mt-0.5">
+                                    (FL:&nbsp;<input type="text" value="${fl}" class="w-6 text-center bg-transparent border-b border-transparent hover:border-slate-300 focus:border-red-500 outline-none hourly-fl" oninput="updateHourlyColor(this)" maxlength="3"><span class="-ml-0.5">°C</span>)
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                hourlyHtml += '</div>';
+
+                // Inject Hourly HTML
+                const hourlyWrapper = document.getElementById('hourly-forecast-wrapper');
+                if (hourlyWrapper) {
+                    hourlyWrapper.innerHTML = hourlyHtml;
+                    checkGlobalHourlyWarnings();
+                    if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+                        lucide.createIcons();
+                    }
+                }
+
+                // Check Thresholds for Highlighting the main box
                 const maxVal = Math.max(curTemp, curFeels, high, highFeels);
                 const minVal = Math.min(curTemp, curFeels, low, lowFeels);
                 const maxWind = Math.max(wSpeed, wGust);
 
                 let alertType = 'none';
-                if (maxVal >= 32) alertType = 'red';
-                else if (maxVal >= 27) alertType = 'orange';
-                else if (minVal <= -10) alertType = 'blue';
-                
-                if (maxWind > 50 && alertType === 'none') {
-                    alertType = 'orange'; // Warn for high winds if temp alert isn't already active
+                if (isColdMonth) {
+                    if (minVal <= -15) alertType = 'blue';
+                    else if (maxWind > 50) alertType = 'orange'; // Warn for high winds
+                } else {
+                    if (maxVal >= 32) alertType = 'red';
+                    else if (maxVal >= 29) alertType = 'orange';
+                    else if (minVal <= -15) alertType = 'blue';
+                    
+                    if (maxWind > 50 && alertType === 'none') {
+                        alertType = 'orange'; // Warn for high winds if temp alert isn't active
+                    }
                 }
 
-                // Format the text
-                const formattedText = `Mississauga Weather:
-Current: ${curTemp}°C (Feels like ${curFeels}°C), ${cond}
-High: ${high}°C (Feels ${highFeels}°C) | Low: ${low}°C (Feels ${lowFeels}°C)
+                // Format the text based on season priority
+                let formattedText = "";
+                if (isColdMonth) {
+                    formattedText = `Mississauga Daily Lowest Temps:
+Min Temp: ${low}°C (Min Feels Like: ${lowFeels}°C)
+Current Conditions: ${curTemp}°C, ${cond}
 Wind: ${wSpeed} km/h ${wDir} (Gusts to ${wGust} km/h)
-AQI: ${aqiVal} (${getAQIRating(aqiVal)}) | UV Index: ${uvVal} (${getUVRating(uvVal)})
+AQI: ${getAQIRating(aqiVal)} | UV Index: ${uvVal} (${getUVRating(uvVal)})
 Today's Forecast: ${forecastCond}`;
+                } else {
+                    formattedText = `Mississauga Daily Peak Temps:
+Max Temp: ${high}°C (Max Feels Like: ${highFeels}°C)
+Current Conditions: ${curTemp}°C, ${cond}
+Wind: ${wSpeed} km/h ${wDir} (Gusts to ${wGust} km/h)
+AQI: ${getAQIRating(aqiVal)} | UV Index: ${uvVal} (${getUVRating(uvVal)})
+Today's Forecast: ${forecastCond}`;
+                }
 
                 // Inject and save
                 if (weatherBox) {
@@ -737,7 +898,7 @@ Today's Forecast: ${forecastCond}`;
 
             } catch (err) {
                 console.error("Error fetching weather:", err);
-                if (weatherBox) weatherBox.value = "Error fetching weather data. Please enter manually.";
+                if (weatherBox) weatherBox.value = "Error fetching weather data. Please check API Key or try again later.";
             } finally {
                 if (icon) icon.classList.remove('animate-spin');
             }
@@ -778,8 +939,15 @@ Today's Forecast: ${forecastCond}`;
             // Reset Weather colors
             const weatherBox = document.getElementById('weather');
             const weatherWarn = document.getElementById('weather-warning');
+            const hourlyWrapper = document.getElementById('hourly-forecast-wrapper');
+            const heatWarn = document.getElementById('hourly-heat-warning');
+            const coldWarn = document.getElementById('hourly-cold-warning');
+            
             if (weatherBox) weatherBox.classList.remove('bg-red-50', 'border-red-500', 'bg-orange-50', 'border-orange-500', 'bg-blue-50', 'border-blue-500');
             if (weatherWarn) weatherWarn.classList.add('hidden');
+            if (hourlyWrapper) hourlyWrapper.innerHTML = '';
+            if (heatWarn) heatWarn.classList.add('hidden');
+            if (coldWarn) coldWarn.classList.add('hidden');
 
             // Reset Vehicle colors
             vehicles.forEach(unit => {
