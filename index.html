@@ -171,8 +171,8 @@
                         </div>
                     </div>
 
-                    <!-- Hourly Forecast Wrapper (Moved here for more space) -->
-                    <div class="mt-auto w-full">
+                    <!-- Hourly Forecast Wrapper -->
+                    <div class="w-full pt-2">
                         <div id="hourly-forecast-wrapper" class="w-full"></div>
                         
                         <div id="hourly-heat-warning" class="hidden text-red-600 text-xs font-bold mt-3 flex items-start gap-1.5 animate-pulse bg-red-50 p-3 rounded-lg border border-red-200">
@@ -187,7 +187,7 @@
                 </div>
 
                 <!-- Right Panel: Weather Main Data -->
-                <div class="lg:col-span-1 space-y-2 flex flex-col h-full">
+                <div class="lg:col-span-1 space-y-2 flex flex-col">
                     <div class="flex justify-between items-center mb-1">
                         <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
                             <i data-lucide="cloud-sun" class="w-3.5 h-3.5"></i> Weather
@@ -197,7 +197,7 @@
                         </button>
                     </div>
                     <!-- Main Daily Recap box -->
-                    <textarea id="weather" rows="4" placeholder="Current/Expected Conditions" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none transition-colors flex-grow text-sm leading-relaxed"></textarea>
+                    <textarea id="weather" rows="4" placeholder="Current/Expected Conditions" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none transition-colors text-sm leading-relaxed"></textarea>
                     
                     <div id="weather-warning" class="hidden text-red-600 text-xs font-bold mt-1 flex items-start gap-1 animate-pulse">
                         <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
