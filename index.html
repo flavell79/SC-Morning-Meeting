@@ -10,14 +10,14 @@
         /* Force colors and backgrounds when saving to PDF */
         @media print {
             .no-print { display: none !important; }
-            
+
             @page {
                 size: portrait;
                 margin: 0.5cm; /* Smaller margins to maximize page space */
             }
 
-            body { 
-                -webkit-print-color-adjust: exact !important; 
+            body {
+                -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 background-color: white !important;
                 padding: 0 !important;
@@ -35,7 +35,7 @@
             }
 
             /* PREVENT BOX BREAKING */
-            section, 
+            section,
             header,
             .bg-slate-900 {
                 break-inside: avoid !important;
@@ -73,6 +73,16 @@
                 display: block !important;
             }
 
+            /* Checkboxes are hidden on screen's .no-print utility elsewhere, but action
+               item completion still needs to show up on the printed page, so we render
+               a print-only glyph mirror instead of hiding the state entirely. */
+            .check-print-mirror {
+                display: none;
+            }
+            .check-print-mirror.print\:inline-block {
+                display: inline-block !important;
+            }
+
             /* FORCE DESKTOP LAYOUT IN PRINT */
             .md\:flex-row { flex-direction: row !important; }
             .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
@@ -82,7 +92,7 @@
             .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
             .lg\:col-span-2 { grid-column: span 2 / span 2 !important; }
             .lg\:col-span-1 { grid-column: span 1 / span 1 !important; }
-            
+
             /* Tighten gaps and padding slightly to ensure everything fits cleanly */
             .gap-6 { gap: 1rem !important; }
             .gap-8 { gap: 1.5rem !important; }
@@ -103,12 +113,18 @@
         .modal-active {
             display: flex !important;
         }
+
+        /* Flag invalid/non-numeric hourly entries visibly instead of silently treating them as 0 */
+        .hourly-invalid {
+            outline: 2px solid #dc2626 !important;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body class="bg-slate-50 p-4 md:p-8 font-sans transition-colors duration-200">
 
     <div id="app" class="max-w-5xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden border border-slate-200 transition-all">
-        
+
         <!-- Header Section -->
         <header class="bg-red-700 text-white p-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -121,7 +137,7 @@
                         <p class="text-red-100">Daily Briefing</p>
                     </div>
                 </div>
-                
+
                 <div class="flex flex-wrap gap-2 no-print">
                     <button onclick="window.print()" class="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-all text-sm font-medium">
                         <i data-lucide="printer" class="w-4 h-4"></i> Save as PDF
@@ -134,21 +150,21 @@
         </header>
 
         <div class="p-6 md:p-8 space-y-8">
-            
+
             <!-- Quick Stats / Logistics -->
             <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
+
                 <!-- Left/Middle Panel: Date, Time, Shift, Chiefs -->
                 <div class="lg:col-span-2 flex flex-col gap-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="flex flex-col h-full">
-                            <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2 mb-2">
+                            <label for="date" class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2 mb-2">
                                 <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Today's Date
                             </label>
                             <input type="date" id="date" oninput="handleDateChange()" class="mt-auto w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
                         </div>
                         <div class="flex flex-col h-full">
-                            <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2 mb-2">
+                            <label for="time" class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2 mb-2">
                                 <i data-lucide="clock" class="w-3.5 h-3.5"></i> Time
                             </label>
                             <textarea id="time" rows="1" oninput="saveData()" spellcheck="true" class="mt-auto w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">0710 hrs</textarea>
@@ -156,7 +172,7 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="flex flex-col h-full">
-                            <label class="text-xs font-bold uppercase text-slate-500 mb-2">Shift On Ops</label>
+                            <label for="shiftOps" class="text-xs font-bold uppercase text-slate-500 mb-2">Shift On Ops</label>
                             <select id="shiftOps" onchange="saveData()" class="mt-auto w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none bg-white">
                                 <option value="">Select Shift</option>
                                 <option value="A Shift">A Shift</option>
@@ -166,7 +182,7 @@
                             </select>
                         </div>
                         <div class="flex flex-col h-full">
-                            <label class="text-xs font-bold uppercase text-slate-500 mb-2">Training District Chiefs (Contact by 0730hrs)</label>
+                            <label for="districtChiefs" class="text-xs font-bold uppercase text-slate-500 mb-2">Training District Chiefs (Contact by 0730hrs)</label>
                             <textarea id="districtChiefs" rows="1" oninput="saveData()" spellcheck="true" class="mt-auto w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
                         </div>
                     </div>
@@ -174,7 +190,7 @@
                     <!-- Hourly Forecast Wrapper -->
                     <div class="w-full pt-2">
                         <div id="hourly-forecast-wrapper" class="w-full"></div>
-                        
+
                         <div id="hourly-heat-warning" class="hidden text-red-600 text-xs font-bold mt-3 flex items-start gap-1.5 animate-pulse bg-red-50 p-3 rounded-lg border border-red-200">
                             <i data-lucide="alert-octagon" class="w-4 h-4 shrink-0"></i>
                             <span>DANGER: Temperatures reaching 32°C+. Verify Extreme Weather conditions and Hourly Projections with the Weather Network.</span>
@@ -183,13 +199,17 @@
                             <i data-lucide="snowflake" class="w-4 h-4 shrink-0"></i>
                             <span>DANGER: Extreme Cold (-15°C or colder). Verify Extreme Weather conditions and Hourly Projections with the Weather Network.</span>
                         </div>
+                        <div id="hourly-wind-warning" class="hidden text-orange-600 text-xs font-bold mt-3 flex items-start gap-1.5 animate-pulse bg-orange-50 p-3 rounded-lg border border-orange-200">
+                            <i data-lucide="wind" class="w-4 h-4 shrink-0"></i>
+                            <span>CAUTION: Sustained wind or gusts exceeding 50 km/h. Confirm outdoor training feasibility.</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Right Panel: Weather Main Data -->
                 <div class="lg:col-span-1 space-y-2 flex flex-col">
                     <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
+                        <label for="weather" class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
                             <i data-lucide="cloud-sun" class="w-3.5 h-3.5"></i> Weather
                         </label>
                         <!-- AUTO-FILL BUTTON TRIGGER -->
@@ -199,7 +219,7 @@
                     </div>
                     <!-- Main Daily Recap box -->
                     <textarea id="weather" rows="4" placeholder="Current/Expected Conditions" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none transition-colors text-sm leading-relaxed"></textarea>
-                    
+
                     <div id="weather-warning" class="hidden text-red-600 text-xs font-bold mt-1 flex items-start gap-1 animate-pulse">
                         <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
                         <span>Verify Extreme Weather conditions and Hourly Projections with the Weather Network.</span>
@@ -233,8 +253,12 @@
                                 </ul>
                             </div>
                             <p>
-                                <strong class="text-slate-800">Extreme Cold (Wind Chill):</strong> 
+                                <strong class="text-slate-800">Extreme Cold (Wind Chill):</strong>
                                 Air temperature -15°C or colder, or wind chill -15°C or colder. Reduce/suspend practical training.
+                            </p>
+                            <p>
+                                <strong class="text-slate-800">Wind:</strong>
+                                Sustained wind or gusts above 50 km/h warrant re-evaluating outdoor evolutions (ladders, aerial ops, etc).
                             </p>
                         </div>
                     </details>
@@ -248,16 +272,16 @@
                 <h2 class="text-lg font-bold text-slate-800 border-l-4 border-red-600 pl-3 uppercase tracking-wide">Programs & Staffing</h2>
                 <div class="grid grid-cols-1 gap-4">
                     <div class="space-y-2">
-                        <label class="text-xs font-bold uppercase text-slate-500">Today’s Programs</label>
+                        <label for="programs" class="text-xs font-bold uppercase text-slate-500">Today's Programs</label>
                         <textarea id="programs" rows="8" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none"></textarea>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <label class="text-xs font-bold uppercase text-slate-500">RTFD Staff & Assignments</label>
+                            <label for="rtfd" class="text-xs font-bold uppercase text-slate-500">RTFD Staff & Assignments</label>
                             <textarea id="rtfd" rows="5" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none bg-slate-50"></textarea>
                         </div>
                         <div class="space-y-2">
-                            <label class="text-xs font-bold uppercase text-slate-500">Modified Staff & Assignments</label>
+                            <label for="modified" class="text-xs font-bold uppercase text-slate-500">Modified Staff & Assignments</label>
                             <textarea id="modified" rows="5" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none bg-slate-50"></textarea>
                         </div>
                     </div>
@@ -284,15 +308,15 @@
                     <h2 class="text-lg font-bold text-slate-800 border-l-4 border-red-600 pl-3 uppercase tracking-wide">Leadership</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="text-xs font-bold uppercase text-slate-500 mb-2 block">Section Chief Flavell</label>
+                            <label for="leadership_flavell" class="text-xs font-bold uppercase text-slate-500 mb-2 block">Section Chief Flavell</label>
                             <textarea id="leadership_flavell" rows="2" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
                         </div>
                         <div>
-                            <label class="text-xs font-bold uppercase text-slate-500 mb-2 block">Section Chief Johnson</label>
+                            <label for="leadership_johnson" class="text-xs font-bold uppercase text-slate-500 mb-2 block">Section Chief Johnson</label>
                             <textarea id="leadership_johnson" rows="2" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
                         </div>
                         <div class="pt-2">
-                            <label class="text-xs font-bold uppercase text-slate-500 mb-2 block">District Chief Requests</label>
+                            <label for="dcRequests" class="text-xs font-bold uppercase text-slate-500 mb-2 block">District Chief Requests</label>
                             <textarea id="dcRequests" rows="2" oninput="saveData()" spellcheck="true" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"></textarea>
                         </div>
                     </div>
@@ -349,16 +373,21 @@
             saveData();
         }
 
+        // Shift rotation is a fixed 28-day repeating cycle (4 platoons: A/B/C/D),
+        // anchored so that May 1, 2026 = day 0 of the cycle ('C' shift). Any date's
+        // position in the cycle is found by counting days since the anchor, mod 28.
+        // If the department's rotation schedule changes, update the anchor date
+        // and/or shiftCycle array below to match the new roster agreement.
         function autoSelectShift() {
             const dateInput = document.getElementById('date').value;
             if (!dateInput) return;
 
             const [year, month, day] = dateInput.split('-').map(Number);
-            const anchorDate = Date.UTC(2026, 4, 1); 
+            const anchorDate = Date.UTC(2026, 4, 1);
             const targetDate = Date.UTC(year, month - 1, day);
-            
+
             const diffDays = Math.floor((targetDate - anchorDate) / (1000 * 60 * 60 * 24));
-            
+
             let cycleDay = diffDays % 28;
             if (cycleDay < 0) cycleDay += 28;
 
@@ -383,19 +412,39 @@
                 mirror.classList.remove('resize-none', 'overflow-hidden');
                 mirror.classList.add('hidden', 'print:block', 'whitespace-pre-wrap', 'break-words', 'print-mirror', 'h-auto');
                 el.classList.add('print:hidden');
-                
+
                 if (el.parentNode) {
                     el.parentNode.insertBefore(mirror, el.nextSibling);
                 }
-                
+
                 const syncMirror = () => {
-                    mirror.textContent = el.value || '\u00A0'; 
+                    mirror.textContent = el.value || '\u00A0';
                     mirror.className = el.className;
                     mirror.classList.remove('resize-none', 'overflow-hidden');
                     mirror.classList.add('hidden', 'print:block', 'whitespace-pre-wrap', 'break-words', 'print-mirror', 'h-auto');
                 };
-                
+
                 el.addEventListener('input', syncMirror);
+                syncMirror();
+            });
+        }
+
+        // Action-item checkboxes are hidden on the printed page (no-print), so their
+        // checked state needs a print-visible stand-in. This injects a small glyph
+        // next to each checkbox that only appears in print and mirrors ✓/☐.
+        function setupCheckboxPrintMirrors() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+                if (el.nextElementSibling && el.nextElementSibling.classList.contains('check-print-mirror')) return;
+
+                const mirror = document.createElement('span');
+                mirror.className = 'check-print-mirror hidden print:inline-block font-bold text-base mr-1 align-middle';
+
+                const syncMirror = () => {
+                    mirror.textContent = el.checked ? '\u2611' : '\u2610'; // ☑ / ☐
+                };
+
+                el.parentNode.insertBefore(mirror, el.nextSibling);
+                el.addEventListener('change', syncMirror);
                 syncMirror();
             });
         }
@@ -409,7 +458,7 @@
                         const div = document.createElement('div');
                         div.className = "p-3 border border-slate-100 bg-slate-50 rounded-lg hover:border-red-200 transition-colors";
                         div.innerHTML = `
-                            <label class="block text-xs font-bold text-slate-700 mb-1">${name}</label>
+                            <label for="officer_${name}" class="block text-xs font-bold text-slate-700 mb-1">${name}</label>
                             <textarea id="officer_${name}" placeholder="Notes..." rows="1" oninput="saveData()" spellcheck="true"
                                 class="w-full text-sm bg-transparent border-b border-slate-200 focus:border-red-500 outline-none resize-none"></textarea>
                         `;
@@ -426,12 +475,14 @@
                         div.innerHTML = `
                             <div class="flex justify-between items-center">
                                 <span class="font-bold text-slate-700">${unit}</span>
+                                <label for="v_status_${unit}" class="sr-only">Status for ${unit}</label>
                                 <select id="v_status_${unit}" onchange="saveData()" class="text-xs font-bold px-2 py-1 rounded bg-slate-100 border-none outline-none cursor-pointer">
                                     <option value="Available">Available</option>
                                     <option value="OOS">OOS</option>
                                     <option value="Reserved">Reserved</option>
                                 </select>
                             </div>
+                            <label for="v_notes_${unit}" class="sr-only">Notes for ${unit}</label>
                             <textarea id="v_notes_${unit}" rows="1" placeholder="Location/Notes" oninput="saveData()" spellcheck="true"
                                 class="text-sm bg-transparent border-b border-slate-100 focus:border-red-500 outline-none py-1"></textarea>
                         `;
@@ -447,6 +498,7 @@
                         div.className = "flex items-start gap-3";
                         div.innerHTML = `
                             <input type="checkbox" id="a_check_${i}" onchange="saveData()" class="w-5 h-5 mt-0.5 rounded border-slate-700 accent-red-500 no-print">
+                            <label for="a_check_${i}" class="sr-only">Mark action item ${i + 1} complete</label>
                             <textarea id="a_text_${i}" rows="1" placeholder="Enter action item..." oninput="saveData()" spellcheck="true"
                                 class="flex-1 bg-transparent border-b border-slate-700 focus:border-red-500 outline-none text-slate-100 print:text-slate-100 py-0.5"></textarea>
                         `;
@@ -455,12 +507,13 @@
                 }
 
                 loadData();
-                
+
                 if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
                     lucide.createIcons();
                 }
 
                 setupPrintMirrors();
+                setupCheckboxPrintMirrors();
 
                 const resizeTextareas = () => {
                     document.querySelectorAll('textarea').forEach(el => {
@@ -486,6 +539,12 @@
                             mirror.textContent = el.value || '\u00A0';
                         }
                     });
+                    document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+                        const mirror = el.nextElementSibling;
+                        if (mirror && mirror.classList.contains('check-print-mirror')) {
+                            mirror.textContent = el.checked ? '\u2611' : '\u2610';
+                        }
+                    });
                 });
 
                 const dateEl = document.getElementById('date');
@@ -506,18 +565,18 @@
                     const el = document.getElementById(id);
                     if (el) data[id] = el.value;
                 });
-                
+
                 officers.forEach(name => {
                     const el = document.getElementById(`officer_${name}`);
                     if (el) data[`officer_${name}`] = el.value;
                 });
-                
+
                 vehicles.forEach(unit => {
                     const select = document.getElementById(`v_status_${unit}`);
                     const notes = document.getElementById(`v_notes_${unit}`);
                     if (select) data[`v_status_${unit}`] = select.value;
                     if (notes) data[`v_notes_${unit}`] = notes.value;
-                    
+
                     if(select) {
                         select.classList.remove('bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700', 'bg-yellow-100', 'text-yellow-700');
                         if(select.value === 'Available') select.classList.add('bg-green-100', 'text-green-700');
@@ -525,7 +584,7 @@
                         if(select.value === 'Reserved') select.classList.add('bg-yellow-100', 'text-yellow-700');
                     }
                 });
-                
+
                 for(let i=0; i<3; i++) {
                     const check = document.getElementById(`a_check_${i}`);
                     const text = document.getElementById(`a_text_${i}`);
@@ -558,7 +617,7 @@
                 const saved = localStorage.getItem('mfes_dashboard_v1');
                 if(!saved) return;
                 const data = JSON.parse(saved);
-                
+
                 Object.keys(data).forEach(id => {
                     const el = document.getElementById(id);
                     if(el) {
@@ -588,7 +647,7 @@
                 const hourlyWrapper = document.getElementById('hourly-forecast-wrapper');
                 if (hourlyWrapper && data['hourly_html']) {
                     hourlyWrapper.innerHTML = data['hourly_html'];
-                    checkGlobalHourlyWarnings(); 
+                    checkGlobalHourlyWarnings();
                 }
 
                 vehicles.forEach(unit => {
@@ -604,9 +663,11 @@
             }
         }
 
-        // --- NEW WEATHER API INTEGRATION (Open-Meteo) ---
-        // Open-Meteo is a powerful, free open-source API that requires zero API keys.
-        
+        // --- WEATHER API INTEGRATION (Open-Meteo) ---
+        // Open-Meteo is a free open-source API that requires zero API keys.
+        // Coordinates below are fixed to Mississauga; update if this dashboard
+        // is ever reused for a different district/station.
+
         function getAQIRating(epaIndex) {
             const ratings = {
                 1: 'Good', 2: 'Moderate', 3: 'Unhealthy for Sensitive Grps',
@@ -629,10 +690,14 @@
             return dirs[Math.round(degrees / 45) % 8];
         }
 
-        // Helper to map WMO codes to readable text
+        // Helper to map WMO codes to readable text. Codes 0-3 are split out
+        // individually since "mostly clear" vs "overcast" matters for
+        // outdoor-training visibility/UV decisions.
         function getWeatherDesc(code) {
             if (code === 0) return 'Clear sky';
-            if (code === 1 || code === 2 || code === 3) return 'Mainly clear to overcast';
+            if (code === 1) return 'Mainly clear';
+            if (code === 2) return 'Partly cloudy';
+            if (code === 3) return 'Overcast';
             if (code === 45 || code === 48) return 'Fog';
             if (code >= 51 && code <= 55) return 'Drizzle';
             if (code >= 61 && code <= 65) return 'Rain';
@@ -646,22 +711,22 @@
             const btn = document.getElementById('fetch-weather-btn');
             const icon = btn.querySelector('i');
             const weatherBox = document.getElementById('weather');
-            
+
             if (icon) icon.classList.add('animate-spin');
             if (weatherBox) weatherBox.value = "Fetching updated weather data for Mississauga...";
-            
+
             try {
                 // Fetch Core Weather Data & AQI Data Concurrently
                 const [wRes, aqiRes] = await Promise.all([
                     fetch(`https://api.open-meteo.com/v1/forecast?latitude=43.589&longitude=-79.6441&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,apparent_temperature&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max&timezone=America%2FNew_York&forecast_days=1`),
                     fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=43.589&longitude=-79.6441&current=us_aqi&timezone=America%2FNew_York`)
                 ]);
-                
+
                 if (!wRes.ok || !aqiRes.ok) throw new Error("Failed to fetch weather data.");
-                
+
                 const wData = await wRes.json();
                 const aqiData = await aqiRes.json();
-                
+
                 // Map Data structure
                 const curTemp = Math.round(wData.current.temperature_2m);
                 const curFeels = Math.round(wData.current.apparent_temperature);
@@ -669,11 +734,11 @@
                 const high = Math.round(wData.daily.temperature_2m_max[0]);
                 const low = Math.round(wData.daily.temperature_2m_min[0]);
                 const forecastCond = getWeatherDesc(wData.daily.weather_code[0]);
-                
+
                 const wSpeed = Math.round(wData.current.wind_speed_10m);
                 const wGust = Math.round(wData.current.wind_gusts_10m);
                 const wDir = getWindDir(wData.current.wind_direction_10m);
-                
+
                 const aqiVal = Math.round(aqiData.current.us_aqi) || 50;
                 // Rough mapping of raw AQI to EPA Index for consistency
                 let epaIndex = 1;
@@ -688,7 +753,7 @@
                 // Process Hourly Data
                 let highFeels = -100;
                 let lowFeels = 100;
-                
+
                 const dateInput = document.getElementById('date').value;
                 const targetMonth = dateInput ? parseInt(dateInput.split('-')[1], 10) : new Date().getMonth() + 1;
                 const isColdMonth = [12, 1, 2, 3, 4].includes(targetMonth);
@@ -703,7 +768,7 @@
                     // Track day's highs and lows for the summary
                     if (fl > highFeels) highFeels = fl;
                     if (fl < lowFeels) lowFeels = fl;
-                    
+
                     if (hour >= 7 && hour <= 17) {
                         let classes = "bg-slate-50 text-slate-700 border-slate-200";
 
@@ -715,7 +780,7 @@
                                 classes = "bg-blue-100 text-blue-800 border-blue-400 font-bold";
                             }
                         } else {
-                            const maxT = Math.max(t, fl); 
+                            const maxT = Math.max(t, fl);
                             if (maxT >= 32) {
                                 classes = "bg-red-200 text-red-900 border-red-500 animate-pulse font-bold";
                             } else if (maxT >= 29) {
@@ -730,10 +795,10 @@
                             <div class="hourly-block flex flex-col items-center justify-center p-2 rounded-xl border ${classes} shadow-sm transition-colors duration-300">
                                 <span class="font-extrabold text-[11px] uppercase tracking-wider mb-1">${hourFormatted}</span>
                                 <div class="flex items-center justify-center font-bold text-sm">
-                                    <input type="text" value="${t}" class="w-8 text-center bg-transparent border-b border-transparent hover:border-slate-300 focus:border-red-500 outline-none hourly-t" oninput="updateHourlyColor(this)" maxlength="3"><span class="-ml-0.5">°C</span>
+                                    <input type="text" inputmode="numeric" value="${t}" aria-label="Temperature at ${hourFormatted}" maxlength="3" class="w-8 text-center bg-transparent border-b border-transparent hover:border-slate-300 focus:border-red-500 outline-none hourly-t" oninput="updateHourlyColor(this)"><span class="-ml-0.5">°C</span>
                                 </div>
                                 <div class="flex items-center justify-center text-xs opacity-90 mt-1">
-                                    <span class="text-[10px]">FL:</span>&nbsp;<input type="text" value="${fl}" class="w-7 text-center bg-transparent border-b border-transparent hover:border-slate-300 focus:border-red-500 outline-none hourly-fl" oninput="updateHourlyColor(this)" maxlength="3"><span class="-ml-0.5">°C</span>
+                                    <span class="text-[10px]">FL:</span>&nbsp;<input type="text" inputmode="numeric" value="${fl}" aria-label="Feels like at ${hourFormatted}" maxlength="3" class="w-7 text-center bg-transparent border-b border-transparent hover:border-slate-300 focus:border-red-500 outline-none hourly-fl" oninput="updateHourlyColor(this)"><span class="-ml-0.5">°C</span>
                                 </div>
                             </div>
                         `;
@@ -751,20 +816,28 @@
                     }
                 }
 
-                // Check Thresholds for Warning box
+                // Check Thresholds for Warning box. Wind is tracked as an independent
+                // flag rather than folded into alertType, since a windy-but-mild day
+                // and a hot-but-calm day need separate call-outs, not one overriding
+                // the other.
                 const maxVal = Math.max(curTemp, curFeels, high, highFeels);
                 const minVal = Math.min(curTemp, curFeels, low, lowFeels);
                 const maxWind = Math.max(wSpeed, wGust);
+                const windAlert = maxWind > 50;
 
                 let alertType = 'none';
                 if (isColdMonth) {
                     if (minVal <= -15) alertType = 'blue';
-                    else if (maxWind > 50) alertType = 'orange';
                 } else {
                     if (maxVal >= 32) alertType = 'red';
                     else if (maxVal >= 29) alertType = 'orange';
                     else if (minVal <= -15) alertType = 'blue';
-                    if (maxWind > 50 && alertType === 'none') alertType = 'orange';
+                }
+
+                const windWarnEl = document.getElementById('hourly-wind-warning');
+                if (windWarnEl) {
+                    if (windAlert) windWarnEl.classList.remove('hidden');
+                    else windWarnEl.classList.add('hidden');
                 }
 
                 let formattedText = "";
@@ -772,14 +845,14 @@
                     formattedText = `Mississauga Daily Lowest Temps:
 Min Temp: ${low}°C (Min Feels Like: ${lowFeels}°C)
 Current Conditions: ${curTemp}°C, ${cond}
-Wind: ${wSpeed} km/h ${wDir} (Gusts to ${wGust} km/h)
+Wind: ${wSpeed} km/h ${wDir} (Gusts to ${wGust} km/h)${windAlert ? ' — CAUTION: exceeds 50 km/h' : ''}
 AQI: ${getAQIRating(epaIndex)} | UV Index: ${uvVal} (${getUVRating(uvVal)})
 Today's Forecast: ${forecastCond}`;
                 } else {
                     formattedText = `Mississauga Daily Peak Temps:
 Max Temp: ${high}°C (Max Feels Like: ${highFeels}°C)
 Current Conditions: ${curTemp}°C, ${cond}
-Wind: ${wSpeed} km/h ${wDir} (Gusts to ${wGust} km/h)
+Wind: ${wSpeed} km/h ${wDir} (Gusts to ${wGust} km/h)${windAlert ? ' — CAUTION: exceeds 50 km/h' : ''}
 AQI: ${getAQIRating(epaIndex)} | UV Index: ${uvVal} (${getUVRating(uvVal)})
 Today's Forecast: ${forecastCond}`;
                 }
@@ -798,10 +871,14 @@ Today's Forecast: ${forecastCond}`;
                     } else if (alertType === 'blue') {
                         weatherBox.classList.add('bg-blue-50', 'border-blue-500');
                         if (warningDiv) warningDiv.classList.remove('hidden');
+                    } else if (windAlert) {
+                        // Wind-only caution still deserves a visible nudge on the summary box
+                        weatherBox.classList.add('bg-orange-50', 'border-orange-500');
+                        if (warningDiv) warningDiv.classList.remove('hidden');
                     }
 
                     weatherBox.value = formattedText;
-                    weatherBox.dispatchEvent(new Event('input')); 
+                    weatherBox.dispatchEvent(new Event('input'));
                 }
                 saveData();
 
@@ -817,20 +894,20 @@ Today's Forecast: ${forecastCond}`;
             const blocks = document.querySelectorAll('.hourly-block');
             let needsHeat = false;
             let needsCold = false;
-            
+
             blocks.forEach(block => {
                 if (block.classList.contains('border-red-500')) needsHeat = true;
                 if (block.classList.contains('border-blue-500') && block.classList.contains('text-blue-900')) needsCold = true;
             });
-            
+
             const heatWarn = document.getElementById('hourly-heat-warning');
             const coldWarn = document.getElementById('hourly-cold-warning');
-            
+
             if (heatWarn) {
                 if (needsHeat) heatWarn.classList.remove('hidden');
                 else heatWarn.classList.add('hidden');
             }
-            
+
             if (coldWarn) {
                 if (needsCold) coldWarn.classList.remove('hidden');
                 else coldWarn.classList.add('hidden');
@@ -838,21 +915,25 @@ Today's Forecast: ${forecastCond}`;
         }
 
         function updateHourlyColor(inputEl) {
+            // Flag genuinely non-numeric entries visibly rather than silently
+            // treating them as 0, which could mask or falsely trigger a warning.
+            const rawValid = /^-?\d+$/.test(inputEl.value.trim());
+            inputEl.classList.toggle('hourly-invalid', !rawValid);
             inputEl.setAttribute('value', inputEl.value);
-            
+
             const block = inputEl.closest('.hourly-block');
             const tInput = block.querySelector('.hourly-t');
             const flInput = block.querySelector('.hourly-fl');
-            
-            const t = isNaN(parseInt(tInput.value)) ? 0 : parseInt(tInput.value);
-            const fl = isNaN(parseInt(flInput.value)) ? 0 : parseInt(flInput.value);
-            
+
+            const t = isNaN(parseInt(tInput.value, 10)) ? 0 : parseInt(tInput.value, 10);
+            const fl = isNaN(parseInt(flInput.value, 10)) ? 0 : parseInt(flInput.value, 10);
+
             const dateInput = document.getElementById('date').value;
             const targetMonth = dateInput ? parseInt(dateInput.split('-')[1], 10) : new Date().getMonth() + 1;
             const isColdMonth = [12, 1, 2, 3, 4].includes(targetMonth);
-            
+
             block.className = 'hourly-block flex flex-col items-center justify-center p-2 rounded-xl border shadow-sm transition-colors duration-300';
-            
+
             if (isColdMonth) {
                 const minT = Math.min(t, fl);
                 if (minT <= -15) {
@@ -863,7 +944,7 @@ Today's Forecast: ${forecastCond}`;
                     block.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
                 }
             } else {
-                const maxT = Math.max(t, fl); 
+                const maxT = Math.max(t, fl);
                 if (maxT >= 32) {
                     block.classList.add('bg-red-200', 'text-red-900', 'border-red-500', 'animate-pulse', 'font-bold');
                 } else if (maxT >= 29) {
@@ -872,7 +953,7 @@ Today's Forecast: ${forecastCond}`;
                     block.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
                 }
             }
-            
+
             checkGlobalHourlyWarnings();
             saveData();
         }
@@ -891,13 +972,13 @@ Today's Forecast: ${forecastCond}`;
             } catch (e) {
                 console.warn("Local storage disabled.");
             }
-            
+
             document.querySelectorAll('input:not([type="checkbox"]), textarea, select').forEach(el => el.value = '');
             document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
-            
+
             const timeEl = document.getElementById('time');
             if (timeEl) timeEl.value = '0710 hrs';
-            
+
             const dateEl = document.getElementById('date');
             if (dateEl) {
                 dateEl.value = new Date().toISOString().split('T')[0];
@@ -909,12 +990,14 @@ Today's Forecast: ${forecastCond}`;
             const hourlyWrapper = document.getElementById('hourly-forecast-wrapper');
             const heatWarn = document.getElementById('hourly-heat-warning');
             const coldWarn = document.getElementById('hourly-cold-warning');
-            
+            const windWarn = document.getElementById('hourly-wind-warning');
+
             if (weatherBox) weatherBox.classList.remove('bg-red-50', 'border-red-500', 'bg-orange-50', 'border-orange-500', 'bg-blue-50', 'border-blue-500');
             if (weatherWarn) weatherWarn.classList.add('hidden');
             if (hourlyWrapper) hourlyWrapper.innerHTML = '';
             if (heatWarn) heatWarn.classList.add('hidden');
             if (coldWarn) coldWarn.classList.add('hidden');
+            if (windWarn) windWarn.classList.add('hidden');
 
             vehicles.forEach(unit => {
                 const select = document.getElementById(`v_status_${unit}`);
@@ -927,6 +1010,7 @@ Today's Forecast: ${forecastCond}`;
 
             toggleModal(false);
             document.querySelectorAll('textarea').forEach(el => el.dispatchEvent(new Event('input')));
+            document.querySelectorAll('input[type="checkbox"]').forEach(el => el.dispatchEvent(new Event('change')));
         }
 
         if (document.readyState === 'loading') {
